@@ -1,0 +1,11 @@
+.MuiTypography-root.MuiTypography-h6 {
+    color:#ff495b;
+}
+
+.MuiListItemButton-root.Mui-selected {
+    background-color: #ffd8dc !important;
+}
+
+.MuiListItemButton-root.Mui-selected svg{
+    color:#ff495b !important
+}

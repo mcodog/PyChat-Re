@@ -14,6 +14,7 @@ import { useDemoRouter } from '@toolpad/core/internal';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { TiMessages } from "react-icons/ti";
 import './styles/Layout.css'
+import { FaTasks } from "react-icons/fa";
 
 import { FaMessage } from "react-icons/fa6";
 
@@ -31,6 +32,11 @@ const NAVIGATION = [
     segment: 'chatlist',
     title: 'Chat',
     icon: <FaMessage />,
+  },
+  {
+    segment: 'tasks',
+    title: 'Tasks',
+    icon: <FaTasks />,
   },
   {
     kind: 'divider',

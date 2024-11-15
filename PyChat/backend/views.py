@@ -7,6 +7,23 @@ from .serializers import ChatSerializer, ChatLogSerializer, TaskSerializer
 from datetime import datetime
 import requests
 
+import spacy
+from spacy.matcher import Matcher
+import requests
+from datetime import datetime
+
+# Load SpaCy's English model
+nlp = spacy.load("en_core_web_sm")
+matcher = Matcher(nlp.vocab)
+
+# Define patterns for various intents
+matcher.add("ADD_TASK", [[{"LOWER": "add"}, {"LOWER": "a"}, {"LOWER": "task"}]])
+matcher.add("GET_TIME", [[{"LOWER": "what"}, {"LOWER": "is"}, {"LOWER": "the"}, {"LOWER": "time"}],
+                         [{"LOWER": "give"}, {"LOWER": "me"}, {"LOWER": "the"}, {"LOWER": "time"}]],)
+matcher.add("GET_WEATHER", [[{"LOWER": "what"}, {"LOWER": "is"}, {"LOWER": "the"}, {"LOWER": "weather"}],
+                            [{"LOWER": "tell"}, {"LOWER": "me"}, {"LOWER": "the"}, {"LOWER": "weather"}],
+                            [{"LOWER": "weather"}, {"LOWER": "now"}]])
+
 from rest_framework import serializers
 
 # Replace with your actual latitude, longitude, and API key
@@ -89,7 +106,7 @@ class ChatLogListCreate(APIView):
             saved_log = serializer.save()  # Save the first ChatLog
 
             if request.data.get('sender') == 'PyChat':
-                return Response({"message_content": "Iam the one", "sender": "PyChat"}, status=status.HTTP_201_CREATED)
+                return Response({"message_content": request.data.get('message_content'), "sender": "PyChat"}, status=status.HTTP_201_CREATED)
 
             # Ensure that the 'chat' field is assigned correctly
             if not saved_log.chat:
@@ -98,16 +115,33 @@ class ChatLogListCreate(APIView):
             process_message = ""
             message_content = request.data.get('message_content')
 
-            if not message_content:
-                return Response({"error": "Message content is missing."}, status=status.HTTP_400_BAD_REQUEST)
+            doc = nlp(message_content)
+            matches = matcher(doc)
 
-            if message_content.startswith("add a task"):
+            if not matches:
+                return "Unknown Command."
+
+            # Identify the first match
+            match_id = matches[0][0]
+            match_name = nlp.vocab.strings[match_id]
+
+            if match_name == "ADD_TASK":
                 process_message = "Adding Task: " + message_content.removeprefix("add a task")
-            elif message_content in ["what is the time", "give me the time"]:
+            elif match_name == "GET_TIME":
+                print("Error Here")
                 now = datetime.now()
                 formatted_time = now.strftime("%I:%M %p")
                 process_message = f"It is currently {formatted_time}"
             elif message_content == "what is the weather":
+                response = requests.get(url)
+                if response.status_code == 200:
+                    weather_data = response.json()
+                    description = weather_data['weather'][0]['description']
+                    temperature = weather_data['main']['temp']
+                    city_name = weather_data['name']
+                    process_message = f"The weather in {city_name} is {description}. The temperature is {temperature}K."
+            elif match_name == "GET_WEATHER":
+                url = "http://api.openweathermap.org/data/2.5/weather?q=London&appid=YOUR_API_KEY"
                 response = requests.get(url)
                 if response.status_code == 200:
                     weather_data = response.json()

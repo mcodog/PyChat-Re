@@ -5,6 +5,11 @@
     padding: 30px;
 }
 
+button {
+    position: relative;
+    z-index: 100;
+}
+
 .chat-main__container {
     /* border:1px solid red; */
     width: 100%;
@@ -75,7 +80,7 @@
     position: relative;
     padding: 10px;
 
-    max-height: 500px;  /* This defines the maximum height */
+    max-height: 700px;  /* This defines the maximum height */
     overflow-y: scroll;   /* Use auto to show scroll when content overflows */
 }
 
@@ -128,4 +133,5 @@
 
 .chat-controls__buttons .active {
     background-color: #ff495b;
+
 }

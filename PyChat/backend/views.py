@@ -7,6 +7,8 @@ from .serializers import ChatSerializer, ChatLogSerializer, TaskSerializer
 from datetime import datetime
 import requests
 
+from rest_framework import serializers
+
 # Replace with your actual latitude, longitude, and API key
 lat = "40.7128"  # Example: New York City latitude
 lon = "-74.0060"  # Example: New York City longitude
@@ -19,7 +21,7 @@ url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appi
 # Chat Views
 class ChatListCreate(APIView):
     def get(self, request):
-        chats = Chat.objects.all()
+        chats = Chat.objects.prefetch_related('logs').all().order_by('-id')  # Prefetch `logs` to optimize queries
         serializer = ChatSerializer(chats, many=True)
         return Response(serializer.data)
 
@@ -35,10 +37,6 @@ class ChatLogListByChat(APIView):
     def get(self, request, chat_id):
         # Filter chat logs by chat_id (foreign key relation)
         chat_logs = ChatLog.objects.filter(chat_id=chat_id)
-
-        # If no chat logs are found, return a 404 error
-        if not chat_logs.exists():
-            return Response({"detail": "No chat logs found for this chat."}, status=status.HTTP_404_NOT_FOUND)
 
         # Serialize the data and return the response
         serializer = ChatLogSerializer(chat_logs, many=True)
@@ -88,41 +86,49 @@ class ChatLogListCreate(APIView):
         serializer = ChatLogSerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
-            saved_log = serializer.save()
+            saved_log = serializer.save()  # Save the first ChatLog
+
+            if request.data.get('sender') == 'PyChat':
+                return Response({"message_content": "Iam the one", "sender": "PyChat"}, status=status.HTTP_201_CREATED)
+
+            # Ensure that the 'chat' field is assigned correctly
+            if not saved_log.chat:
+                return Response({"error": "Chat is not assigned to the log."}, status=status.HTTP_400_BAD_REQUEST)
+
             process_message = ""
-            if ((request.data.get('message_content')).startswith("add a task")):
-                process_message = "Adding Task: " + " " + (request.data.get('message_content')).removeprefix("add a task")
-            elif ((request.data.get('message_content')) == "what is the time" or (request.data.get('message_content')) == "give me the time"):
+            message_content = request.data.get('message_content')
+
+            if not message_content:
+                return Response({"error": "Message content is missing."}, status=status.HTTP_400_BAD_REQUEST)
+
+            if message_content.startswith("add a task"):
+                process_message = "Adding Task: " + message_content.removeprefix("add a task")
+            elif message_content in ["what is the time", "give me the time"]:
                 now = datetime.now()
                 formatted_time = now.strftime("%I:%M %p")
-                process_message = "It is currently " + " " + formatted_time
-            elif ((request.data.get('message_content')) == "what is the weather"):
+                process_message = f"It is currently {formatted_time}"
+            elif message_content == "what is the weather":
                 response = requests.get(url)
-
-                # Check if the request was successful (status code 200)
                 if response.status_code == 200:
-                    # Store the result (JSON response) in a variable
                     weather_data = response.json()
-                    description = weather_data['weather'][0]['description']
-                    print(f"Weather: {weather_data}")
                     description = weather_data['weather'][0]['description']
                     temperature = weather_data['main']['temp']
                     city_name = weather_data['name']
-
-                    # Creating the processed message
-                    process_message = f"The Weather in {city_name} is {description}. The temperature is {temperature}K."
-
+                    process_message = f"The weather in {city_name} is {description}. The temperature is {temperature}K."
                 else:
-                    print(f"Error: Unable to fetch data (Status Code: {response.status_code})")
+                    process_message = "Error: Unable to fetch weather data."
             else:
-                process_message = "Unkown Command."
-            ChatLog.objects.create(
-                chat=saved_log.chat,  # Set the same chat instance
+                process_message = "Unknown Command."
+
+            # Create a new ChatLog instance with the same chat (saved_log.chat)
+            new_chat_log = ChatLog.objects.create(
+                chat=saved_log.chat,  # Use the same chat instance
                 message_content=process_message,
                 sender="PyChat"
             )
-            return Response({ "message_content": process_message, "sender": "PyChat" }, status=status.HTTP_201_CREATED)
+
+            return Response({"message_content": process_message, "sender": "PyChat"}, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

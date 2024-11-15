@@ -28,7 +28,7 @@ const NAVIGATION = [
     icon: <DashboardIcon />,
   },
   {
-    segment: 'chat',
+    segment: 'chatlist',
     title: 'Chat',
     icon: <FaMessage />,
   },

@@ -3,7 +3,7 @@ from django.db import models
 # Enum for sender types
 class Sender(models.TextChoices):
     USER = "User"
-    PYCHAT = "Pychat"
+    PYCHAT = "PyChat"
 
 # Chat model
 class Chat(models.Model):

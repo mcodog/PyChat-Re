@@ -3,10 +3,11 @@ import './styles/Chat.css';
 import { FaMicrophone } from "react-icons/fa";
 import axios from 'axios'
 
-const Chat = () => {
+const Chat = ({ id, setModalActive }) => {
+ 
   const [chatRecord, setChatRecord] = useState([]);
   const [transcript, setTranscript] = useState('');
-  const [isListening, setIsListening] = useState(false);
+  const [isListening, setIsListening] = useState(true);
   const recognitionRef = useRef(null);
   const interimTranscript = useRef('');
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -18,7 +19,9 @@ const Chat = () => {
 
   const retrieveRecords = async () => {
     try {
-      const res = await axios.get(`http://localhost:8000/api/chat_logs/messages/1`)
+      const res = await axios.get(`http://localhost:8000/api/chat_logs/messages/${id}`)
+      console.log("chats from", id)
+      console.log(res)
       setChatRecord(res.data)
     } catch (e) {
       console.log(e)
@@ -27,7 +30,7 @@ const Chat = () => {
 
   const sendNewChat = async (message) => {
     try {
-      const formData = { chat: 1, message_content: message, sender: "User" };
+      const formData = { chat: id, message_content: message, sender: "User" };
       const res = await axios.post(
         `http://localhost:8000/api/chat_logs/`,
         formData,
@@ -71,6 +74,7 @@ const Chat = () => {
   
         if (res.data.message_content === "exit") {
           setIsListening(false);
+          
         } else {
           setIsListening(true);
         }
@@ -94,7 +98,7 @@ const Chat = () => {
   useEffect(() => {
     setMessages([])
     chatRecord.map((chat) => {
-      setMessages((prevMessages) => [...prevMessages, { chat: 1, content: chat.message_content, sender: chat.sender }])
+      setMessages((prevMessages) => [...prevMessages, { chat: id, content: chat.message_content, sender: chat.sender }])
     })
   }, [chatRecord])
 
@@ -170,7 +174,10 @@ const Chat = () => {
           speech.rate = 1;
   
           speech.onstart = () => setIsSpeaking(true);
-          speech.onend = () => setIsSpeaking(false);
+          speech.onend = () => {
+            setIsSpeaking(false)
+            setModalActive(false)
+          };
   
           window.speechSynthesis.speak(speech);
         }
@@ -237,16 +244,17 @@ const Chat = () => {
         </div>
         <div className="chat-log__container" ref={chatContainerRef}>
           {
-            messages.map((message) => {
+            messages.map((message, index) => {
+              console.log(message)
               return (
                 message.sender === 'User' ? (
-                  <div className="user-message">
+                  <div key={index} className="user-message">
                     <div className="chat-content">
                       {message.content}
                     </div>
                   </div>
                 ) : (
-                  <div className="pychat-message">
+                  <div key={index} className="pychat-message">
                     <div className="chat-content">
                       {message.content}
                     </div>

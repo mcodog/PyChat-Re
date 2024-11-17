@@ -27,7 +27,7 @@ const ChatList = () => {
     const [chatList, setChatList] = useState([])
     const loadChatList = async () => {
         try {
-            const res = await axios.get('http://localhost:8000/api/chats/')
+            const res = await axios.get('https://pychat-re.onrender.com/api/chats/')
             setChatList(res.data)
         } catch (e) {
             console.log(e)
@@ -48,12 +48,12 @@ const ChatList = () => {
     const handleNewChat = async () => {
         try {
             const formData = { "title": "PyChat Message", "description": "Testing Messaging." }
-            const res = await axios.post(`http://localhost:8000/api/chats/`, formData)
+            const res = await axios.post(`https://pychat-re.onrender.com/api/chats/`, formData)
             console.log(res.data)
             await setSelId(res.data.id)
             const formDataLogs = { chat: res.data.id, message_content: "Hello, I am PyChat. To start our conversation, please click on the mic button below.", sender: "PyChat" };
             const resLogs = await axios.post(
-                `http://localhost:8000/api/chat_logs/`,
+                `https://pychat-re.onrender.com/api/chat_logs/`,
                 formDataLogs,
                 {
                     headers: {
@@ -71,7 +71,7 @@ const ChatList = () => {
 
     const handleDelete = async (id) => {
         try {
-            const res = await axios.delete(`http://localhost:8000/api/chats/${id}/`)
+            const res = await axios.delete(`https://pychat-re.onrender.com/api/chats/${id}/`)
             loadChatList()
         } catch(e) {
             console.log(e)

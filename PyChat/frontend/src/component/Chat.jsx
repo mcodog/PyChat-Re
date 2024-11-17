@@ -19,7 +19,7 @@ const Chat = ({ id, setModalActive }) => {
 
   const retrieveRecords = async () => {
     try {
-      const res = await axios.get(`http://localhost:8000/api/chat_logs/messages/${id}`)
+      const res = await axios.get(`https://pychat-re.onrender.com/api/chat_logs/messages/${id}`)
       console.log("chats from", id)
       console.log(res)
       setChatRecord(res.data)
@@ -32,7 +32,7 @@ const Chat = ({ id, setModalActive }) => {
     try {
       const formData = { chat: id, message_content: message, sender: "User" };
       const res = await axios.post(
-        `http://localhost:8000/api/chat_logs/`,
+        `/api/chat_logs/`,
         formData,
         {
           headers: {

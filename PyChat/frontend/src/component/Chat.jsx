@@ -31,8 +31,7 @@ const Chat = ({ id, setModalActive }) => {
   const sendNewChat = async (message) => {
     try {
       const formData = { chat: id, message_content: message, sender: "User" };
-      const res = await axios.post(
-        `/api/chat_logs/`,
+      const res = await axios.post(`https://pychat-re.onrender.com/api/chat_logs/`,
         formData,
         {
           headers: {

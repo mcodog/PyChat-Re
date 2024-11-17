@@ -7,4 +7,5 @@ export default defineConfig({
     server: {
     host: true, // Exposes the app to external networks
     port: process.env.PORT || 3000,
+    }
 })

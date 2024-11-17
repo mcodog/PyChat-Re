@@ -4,3 +4,4 @@ django-cors-headers
 djangorestframework
 google-generativeai
 g4f[all]
+gunicorn

@@ -7,6 +7,7 @@ from .serializers import ChatSerializer, ChatLogSerializer, TaskSerializer
 from datetime import datetime
 import requests
 from g4f.client import Client
+import g4f
 import webbrowser
 
 client = Client()

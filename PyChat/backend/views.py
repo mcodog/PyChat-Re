@@ -12,7 +12,7 @@ import webbrowser
 client = Client()
 def chatwithgpt(prompt):
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="text-davinci-003",
         messages=[{"role": "user", "content": prompt}],
         # Add any other necessary parameters
     )

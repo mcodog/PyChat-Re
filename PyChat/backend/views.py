@@ -14,7 +14,7 @@ client = Client()
 def chatwithgpt(prompt):
     response = client.chat.completions.create(
         model="gpt-4",
-        provider=g4f.Provider.Bing,
+        provider=g4f.Provider.Blackbox,
         messages=[{"role": "user", "content": prompt}],
         # Add any other necessary parameters
     )

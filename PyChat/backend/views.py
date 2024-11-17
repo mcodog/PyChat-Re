@@ -6,11 +6,29 @@ from .models import Chat, ChatLog, Task
 from .serializers import ChatSerializer, ChatLogSerializer, TaskSerializer
 from datetime import datetime
 import requests
+from g4f.client import Client
+import webbrowser
+
+client = Client()
+def chatwithgpt(prompt):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        # Add any other necessary parameters
+    )
+    return response.choices[0].message.content
+
 
 import spacy
 from spacy.matcher import Matcher
 import requests
 from datetime import datetime
+import google.generativeai as genai
+import os
+
+genai.configure(api_key='AIzaSyAxeHL1Udglxp68hrMh37rWlyq9_NWp3eg')
+
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Load SpaCy's English model
 nlp = spacy.load("en_core_web_sm")
@@ -19,20 +37,42 @@ matcher = Matcher(nlp.vocab)
 # Define patterns for various intents
 matcher.add("ADD_TASK", [[{"LOWER": "add"}, {"LOWER": "a"}, {"LOWER": "task"}]])
 matcher.add("GET_TIME", [[{"LOWER": "what"}, {"LOWER": "is"}, {"LOWER": "the"}, {"LOWER": "time"}],
-                         [{"LOWER": "give"}, {"LOWER": "me"}, {"LOWER": "the"}, {"LOWER": "time"}]],)
+                         [{"LOWER": "give"}, {"LOWER": "me"}, {"LOWER": "the"}, {"LOWER": "time"}],
+                         [{"LOWER": "what"}, {"LOWER": "time"}, {"LOWER": "is"}, {"LOWER": "it"}]],)
+matcher.add("OPEN_CHROME", [[{"LOWER": "open"}, {"LOWER": "chrome"}],],)
+matcher.add("OPEN_YOUTUBE", [[{"LOWER": "open"}, {"LOWER": "youtube"}],],)
 matcher.add("GET_WEATHER", [[{"LOWER": "what"}, {"LOWER": "is"}, {"LOWER": "the"}, {"LOWER": "weather"}],
                             [{"LOWER": "tell"}, {"LOWER": "me"}, {"LOWER": "the"}, {"LOWER": "weather"}],
                             [{"LOWER": "weather"}, {"LOWER": "now"}]])
 
+def get_lat_lon(city_name, api_key):
+    url = f"http://api.openweathermap.org/geo/1.0/direct?q={city_name}&limit=1&appid={api_key}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        if data:
+            latitude = data[0]['lat']
+            longitude = data[0]['lon']
+            return latitude, longitude
+        else:
+            return "City not found", None
+    else:
+        return f"Error: {response.status_code}", None
+
+def extract_city_name(message_content):
+    doc = nlp(message_content)
+    for ent in doc.ents:
+        if ent.label_ == "GPE":  # Look for geopolitical entities
+            return ent.text
+    return None  # No city found
+
 from rest_framework import serializers
 
 # Replace with your actual latitude, longitude, and API key
-lat = "40.7128"  # Example: New York City latitude
-lon = "-74.0060"  # Example: New York City longitude
-api_key = "7b786a29cb6901b206b317a87d162262"  # Replace with your OpenWeatherMap API key
+
 
 # Construct the URL for the API request
-url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}"
+
 
 
 # Chat Views
@@ -119,40 +159,60 @@ class ChatLogListCreate(APIView):
             matches = matcher(doc)
 
             if not matches:
-                return "Unknown Command."
-
-            # Identify the first match
-            match_id = matches[0][0]
-            match_name = nlp.vocab.strings[match_id]
-
-            if match_name == "ADD_TASK":
-                process_message = "Adding Task: " + message_content.removeprefix("add a task")
-            elif match_name == "GET_TIME":
-                print("Error Here")
-                now = datetime.now()
-                formatted_time = now.strftime("%I:%M %p")
-                process_message = f"It is currently {formatted_time}"
-            elif message_content == "what is the weather":
-                response = requests.get(url)
-                if response.status_code == 200:
-                    weather_data = response.json()
-                    description = weather_data['weather'][0]['description']
-                    temperature = weather_data['main']['temp']
-                    city_name = weather_data['name']
-                    process_message = f"The weather in {city_name} is {description}. The temperature is {temperature}K."
-            elif match_name == "GET_WEATHER":
-                url = "http://api.openweathermap.org/data/2.5/weather?q=London&appid=YOUR_API_KEY"
-                response = requests.get(url)
-                if response.status_code == 200:
-                    weather_data = response.json()
-                    description = weather_data['weather'][0]['description']
-                    temperature = weather_data['main']['temp']
-                    city_name = weather_data['name']
-                    process_message = f"The weather in {city_name} is {description}. The temperature is {temperature}K."
-                else:
-                    process_message = "Error: Unable to fetch weather data."
+                # generateAi = model.generate_content(message_content)
+                # print(generateAi)
+                # process_message = generateAi.text
+                process_message = chatwithgpt(message_content)
             else:
-                process_message = "Unknown Command."
+                # Identify the first match
+                match_id = matches[0][0]
+                match_name = nlp.vocab.strings[match_id]
+
+                if match_name == "ADD_TASK":
+                    process_message = "Adding Task: " + message_content.removeprefix("add a task")
+                elif match_name == "GET_TIME":
+                    print("Error Here")
+                    now = datetime.now()
+                    formatted_time = now.strftime("%I:%M %p")
+                    process_message = f"It is currently {formatted_time}"
+                # elif message_content == "what is the weather":
+                #     api_key = "7b786a29cb6901b206b317a87d162262"
+                #     city = "London"
+                #     lat, lon = get_lat_lon(city, API_KEY)
+                #     url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}"
+                #     response = requests.get(url)
+                #     if response.status_code == 200:
+                #         weather_data = response.json()
+                #         description = weather_data['weather'][0]['description']
+                #         temperature = weather_data['main']['temp']
+                #         city_name = weather_data['name']
+                #         process_message = f"The weather in {city_name} is {description}. The temperature is {temperature}K."
+                elif match_name == "GET_WEATHER":
+                    city_name = extract_city_name(message_content)
+                    if city_name:
+                        api_key = "7b786a29cb6901b206b317a87d162262"  # Replace with your OpenWeatherMap API key
+                        lat, lon = get_lat_lon(city_name, api_key)
+                        if lat and lon:
+                            url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}"
+                            response = requests.get(url)
+                            if response.status_code == 200:
+                                weather_data = response.json()
+                                description = weather_data['weather'][0]['description']
+                                temperature = weather_data['main']['temp']
+                                process_message = f"The weather in {city_name} is {description}. The temperature is {temperature}K."
+                            else:
+                                process_message = "Error: Unable to fetch weather data."
+                        else:
+                            process_message = f"Could not determine latitude and longitude for {city_name}."
+                    else:
+                        process_message = "Please specify a city name to check the weather."
+                elif match_name == "OPEN_CHROME":
+                    process_message = "Opening Chrome..."
+                    webbrowser.open('https://www.google.com')
+                elif match_name == "OPEN_YOUTUBE":
+                    process_message = "Opening YouTube..."
+                    webbrowser.open('https://www.youtube.com')
+
 
             # Create a new ChatLog instance with the same chat (saved_log.chat)
             new_chat_log = ChatLog.objects.create(

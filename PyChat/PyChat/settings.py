@@ -25,7 +25,9 @@ SECRET_KEY = 'django-insecure-87o&8%5m01^3lsnm*)9!8-x!4$_peb%1a6n46936!q4j-qd52p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+CORS_ALLOWED_ORIGINS = [
+    "https://pychat-re-front.onrender.com",  # Replace this with your frontend URL
+]
 
 
 # Application definition

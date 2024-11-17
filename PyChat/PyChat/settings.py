@@ -29,6 +29,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://pychat-re-front.onrender.com",  # Replace this with your frontend URL
 ]
 
+ALLOWED_HOSTS = [ 'pychat-re.onrender.com', '*' ]
 
 # Application definition
 

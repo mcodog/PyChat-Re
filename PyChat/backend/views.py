@@ -357,17 +357,14 @@ def login_view(request):
         username = data.get('username')
         password = data.get('password')
 
-        # Authenticate user with provided credentials
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            # Log in the user if authentication is successful
             login(request, user)
-            return JsonResponse({'message': 'Login successful'}, status=200)
+            # Generate or retrieve an auth token
+            token, _ = Token.objects.get_or_create(user=user)
+            return JsonResponse({'message': 'Login successful', 'token': token.key}, status=200)
 
-        # If authentication fails, return an error message
         return JsonResponse({'error': 'Invalid credentials'}, status=400)
-    
-    # Return error if method is not POST
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 @api_view(['GET'])

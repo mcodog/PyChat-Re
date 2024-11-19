@@ -18,6 +18,8 @@ import json
 from django.contrib.auth import logout
 
 from rest_framework.decorators import api_view
+from rest_framework.authtoken.models import Token
+
 
 client = Client()
 def chatwithgpt(prompt):

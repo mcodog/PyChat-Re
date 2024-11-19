@@ -34,7 +34,7 @@ const LoginForm = () => {
       );
 
       console.log('Login successful:', response.data);
-      // console.log(response.data.token)
+      console.log(response.data.token)
       // Assuming the backend responds with a message upon success
       localStorage.setItem('token', response.data.token);
       navigate('/'); // Redirect user to homepage or another page upon successful login

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import './styles/Shared.css'
 import './styles/ChatList.css'
 import Divider from '@mui/material/Divider'
@@ -7,8 +7,12 @@ import axios from 'axios'
 import './styles/ModalAnims.css'
 import Chat from './Chat';
 import Skeleton from '@mui/material/Skeleton';
+import { AuthContext } from '../utils/AuthContext';
+import axiosInstance from '../utils/AxiosInstace';
+import { FaTrash } from "react-icons/fa6";
 
 const ChatList = () => {
+    const { isAuthenticated, userId, loading } = useContext(AuthContext);
     const [modalActive, setModalActive] = useState(false);
     const [modalClass, setModalClass] = useState('');
     const [selId, setSelId] = useState()
@@ -27,8 +31,9 @@ const ChatList = () => {
     const [chatList, setChatList] = useState([])
     const loadChatList = async () => {
         try {
-            const res = await axios.get('https://pychat-re.onrender.com/api/chats/')
-            setChatList(res.data)
+            const res = await axiosInstance.get('/chats/');
+            const filteredChats = res.data.filter(chat => chat.user == userId);
+            setChatList(filteredChats);
         } catch (e) {
             console.log(e)
         }
@@ -47,13 +52,13 @@ const ChatList = () => {
 
     const handleNewChat = async () => {
         try {
-            const formData = { "title": "PyChat Message", "description": "Testing Messaging." }
-            const res = await axios.post(`https://pychat-re.onrender.com/api/chats/`, formData)
+            const formData = { "user": userId, "title": "PyChat Message", "description": "Testing Messaging." }
+            const res = await axiosInstance.post(`/chats/`, formData)
             console.log(res.data)
             await setSelId(res.data.id)
             const formDataLogs = { chat: res.data.id, message_content: "Hello, I am PyChat. To start our conversation, please click on the mic button below.", sender: "PyChat" };
-            const resLogs = await axios.post(
-                `https://pychat-re.onrender.com/api/chat_logs/`,
+            const resLogs = await axiosInstance.post(
+                `/chat_logs/`,
                 formDataLogs,
                 {
                     headers: {
@@ -71,7 +76,7 @@ const ChatList = () => {
 
     const handleDelete = async (id) => {
         try {
-            const res = await axios.delete(`https://pychat-re.onrender.com/api/chats/${id}/`)
+            const res = await axiosInstance.delete(`/${id}/`)
             loadChatList()
         } catch(e) {
             console.log(e)
@@ -136,7 +141,10 @@ const ChatList = () => {
                                     <div className="chat-id">ID: {chatId}</div>
                                     <div className="chat-title" onClick={() => {openChat(chat.id)}}>Starting Message: {startingMessage}</div>
                                     <div className="chat-timestamps">Last Message: {formattedDate}</div>
-                                    <button onClick={() => {handleDelete(chat.id)}}>Delete</button>
+                                    <div className='centered'>
+                                        <button className='custom-button' onClick={() => {handleDelete(chat.id)}}><FaTrash /></button>
+                                    </div>
+                                    
                                 </div>
                             );
                         })

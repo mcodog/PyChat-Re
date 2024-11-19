@@ -9,6 +9,16 @@ import requests
 from g4f.client import Client
 import webbrowser
 
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+from django.contrib.auth import logout
+
+from rest_framework.decorators import api_view
+
 client = Client()
 def chatwithgpt(prompt):
     response = client.chat.completions.create(
@@ -159,17 +169,26 @@ class ChatLogListCreate(APIView):
             matches = matcher(doc)
 
             if not matches:
+                pass
                 # generateAi = model.generate_content(message_content)
                 # print(generateAi)
                 # process_message = generateAi.text
-                process_message = chatwithgpt(message_content)
+                # process_message = chatwithgpt(message_content)
             else:
                 # Identify the first match
                 match_id = matches[0][0]
                 match_name = nlp.vocab.strings[match_id]
 
                 if match_name == "ADD_TASK":
-                    process_message = "Adding Task: " + message_content.removeprefix("add a task")
+                    user = User.objects.get(pk=request.data.get('user'))
+
+                    new_task = Task.objects.create(
+                        title=message_content.removeprefix("add a task"),
+                        description="",
+                        user=user
+                    )
+
+                    process_message = "Adding Task: " + message_content.removeprefix("add a task" + " as pending. Please see Tasks Page")
                 elif match_name == "GET_TIME":
                     print("Error Here")
                     now = datetime.now()
@@ -222,7 +241,6 @@ class ChatLogListCreate(APIView):
             )
 
             return Response({"message_content": process_message, "sender": "PyChat"}, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -303,3 +321,57 @@ class TaskDetail(APIView):
 
         task.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class LogoutView(APIView):
+    def post(self, request):
+        logout(request)  # Django's logout function
+        return Response({'message': 'Successfully logged out'}, status=status.HTTP_200_OK)
+
+@csrf_exempt
+def register(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({'error': 'Username already taken'}, status=400)
+
+        # Create the user
+        user = User.objects.create_user(username=username, email=email, password=password)
+
+        # Authenticate and log in the user
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({'message': 'User registered and logged in successfully'}, status=201)
+
+        return JsonResponse({'error': 'Unable to log in the user'}, status=500)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def login_view(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data.get('username')
+        password = data.get('password')
+
+        # Authenticate user with provided credentials
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            # Log in the user if authentication is successful
+            login(request, user)
+            return JsonResponse({'message': 'Login successful'}, status=200)
+
+        # If authentication fails, return an error message
+        return JsonResponse({'error': 'Invalid credentials'}, status=400)
+    
+    # Return error if method is not POST
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@api_view(['GET'])
+def check_auth_status(request):
+    if request.user.is_authenticated:
+        return Response({"isAuthenticated": True, "username": request.user.username, "id": request.user.id})
+    return Response({"isAuthenticated": False})

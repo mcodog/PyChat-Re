@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Enum for sender types
 class Sender(models.TextChoices):
@@ -9,7 +10,8 @@ class Sender(models.TextChoices):
 class Chat(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)  # timestamp when chat is created
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default="") 
 
     def __str__(self):
         return self.title
@@ -30,6 +32,7 @@ class Task(models.Model):
     description = models.TextField()
     status = models.CharField(max_length=20, choices=[("Pending", "Pending"), ("Completed", "Completed")], default="Pending")
     created_at = models.DateTimeField(auto_now_add=True)  # timestamp when task is created
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default="") 
 
     def __str__(self):
         return self.title

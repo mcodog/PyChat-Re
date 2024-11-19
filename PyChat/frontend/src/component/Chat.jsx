@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import './styles/Chat.css';
 import { FaMicrophone } from "react-icons/fa";
 import axios from 'axios'
+import axiosInstance from '../utils/AxiosInstace';
 
 const Chat = ({ id, setModalActive }) => {
- 
+  
   const [chatRecord, setChatRecord] = useState([]);
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(true);
@@ -19,7 +20,7 @@ const Chat = ({ id, setModalActive }) => {
 
   const retrieveRecords = async () => {
     try {
-      const res = await axios.get(`https://pychat-re.onrender.com/api/chat_logs/messages/${id}`)
+      const res = await axiosInstance.get(`/chat_logs/messages/${id}`)
       console.log("chats from", id)
       console.log(res)
       setChatRecord(res.data)
@@ -31,7 +32,7 @@ const Chat = ({ id, setModalActive }) => {
   const sendNewChat = async (message) => {
     try {
       const formData = { chat: id, message_content: message, sender: "User" };
-      const res = await axios.post(`https://pychat-re.onrender.com/api/chat_logs/`,
+      const res = await axiosInstance.post(`/chat_logs/`,
         formData,
         {
           headers: {

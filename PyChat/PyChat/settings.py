@@ -43,6 +43,11 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+CSRF_COOKIE_SECURE = True  # Only send CSRF cookies over HTTPS (set to False for local testing)
+SESSION_COOKIE_SECURE = True 
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default session storage
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -65,6 +70,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://localhost:3000',
      'https://pychat-g0tx.onrender.com' # For https setup if needed
 ]
+
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True

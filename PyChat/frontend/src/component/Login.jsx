@@ -23,8 +23,19 @@ const LoginForm = () => {
     console.log('Login Data:', formData);
   
     try {
-      const response = await axiosInstance.post('/login/', formData, { withCredentials: true });
+      const response = await axiosInstance.post(
+        '/login/',
+        formData,
+        {
+          withCredentials: true, 
+          headers: {
+            'Content-Type': 'application/json', 
+          },
+        }
+      );
+      
       console.log('Login successful:', response.data);
+      console.log(response.data.token)
       // Assuming the backend responds with a message upon success
       localStorage.setItem('token', response.data.token);
       navigate('/'); // Redirect user to homepage or another page upon successful login

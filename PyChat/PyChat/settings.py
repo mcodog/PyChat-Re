@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'backend',
     'rest_framework',
     'corsheaders',
+    'rest_framework.authtoken'
 ]
 
 CSRF_COOKIE_SECURE = True  # Only send CSRF cookies over HTTPS (set to False for local testing)

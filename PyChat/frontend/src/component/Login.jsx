@@ -27,7 +27,6 @@ const LoginForm = () => {
         '/login/',
         formData,
         {
-          withCredentials: true, 
           headers: {
             'Content-Type': 'application/json', 
           },

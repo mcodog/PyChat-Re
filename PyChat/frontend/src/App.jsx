@@ -15,7 +15,7 @@ import Task from './component/Task'
 function App() {
   axios.defaults.withCredentials = true;
   // axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-  axios.defaults.headers['X-CSRFToken'] = document.cookie.match(/csrftoken=([^;]+)/)[1];
+  // axios.defaults.headers['X-CSRFToken'] = document.cookie.match(/csrftoken=([^;]+)/)[1];
 
   return (
     <AuthProvider>

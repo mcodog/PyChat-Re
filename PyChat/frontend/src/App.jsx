@@ -14,7 +14,7 @@ import Task from './component/Task'
 
 function App() {
   axios.defaults.withCredentials = true;
-
+  axios.defaults.headers['Content-Type'] = 'application/json';
   return (
     <AuthProvider>
       <Routes>

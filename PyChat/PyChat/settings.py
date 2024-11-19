@@ -74,7 +74,7 @@ CSRF_TRUSTED_ORIGINS = [
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
 
 ROOT_URLCONF = 'PyChat.urls'

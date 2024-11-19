@@ -55,12 +55,14 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "https://pychat-g0tx.onrender.com"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',  # Add your frontend URL here
-    'https://localhost:3000', # For https setup if needed
+    'https://localhost:3000',
+     'https://pychat-g0tx.onrender.com' # For https setup if needed
 ]
 
 CORS_ALLOW_CREDENTIALS = True

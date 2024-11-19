@@ -13,9 +13,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchAuthStatus = async () => {
       try {
-        const response = await axiosInstance.get('/auth/status/', {
-          withCredentials: true, // Required for session-based auth
-        });
+        const response = await axiosInstance.get('/auth/status/');
         setIsAuthenticated(response.data.isAuthenticated);
         setUser(response.data.isAuthenticated ? response.data.username : null);
         console.log(response.data)

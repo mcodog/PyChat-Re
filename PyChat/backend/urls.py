@@ -17,9 +17,9 @@ urlpatterns = [
     path('tasks/', views.TaskListCreate.as_view(), name='task-list-create'),
     path('tasks/<int:pk>/', views.TaskDetail.as_view(), name='task-detail'),
 
-    path('register/', register, name='register'),
+    path('register/', views.register, name='register'),
     path('login/', login_view, name='login'),
 
-    path('auth/status/', check_auth_status, name='auth_status'),
+    path('auth/status/', views.check_auth_status, name='auth_status'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
 ]

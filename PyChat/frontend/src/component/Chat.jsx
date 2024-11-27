@@ -4,7 +4,7 @@ import { FaMicrophone } from "react-icons/fa";
 import axios from 'axios'
 import axiosInstance from '../utils/AxiosInstace';
 
-const Chat = ({ id, setModalActive }) => {
+const Chat = ({ userId, id, setModalActive }) => {
   
   const [chatRecord, setChatRecord] = useState([]);
   const [transcript, setTranscript] = useState('');
@@ -31,7 +31,7 @@ const Chat = ({ id, setModalActive }) => {
 
   const sendNewChat = async (message) => {
     try {
-      const formData = { chat: id, message_content: message, sender: "User" };
+      const formData = { chat: id, message_content: message, sender: "User", user: userId };
       const res = await axiosInstance.post(`/chat_logs/`,
         formData,
         {

@@ -13,11 +13,28 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchAuthStatus = async () => {
       try {
+        console.log(isAuthenticated)
         const response = await axiosInstance.get('/auth/status/');
-        setIsAuthenticated(response.data.isAuthenticated);
-        setUser(response.data.isAuthenticated ? response.data.username : null);
-        console.log(response.data)
-        setUserId(response.data.isAuthenticated ? response.data.id : null)
+
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+              throw new Error('No token found');
+          }
+          const strippedToken = token.replace('Bearer ', '');
+          console.log('Authenticated with token:', strippedToken);
+
+          const base64Url = token.split('.')[1]; // The payload is the second part of the token
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // Convert to Base64 format
+          const payload = JSON.parse(atob(base64)); // Decode and parse to JSON
+          
+          setIsAuthenticated(true);
+          setUser(payload.username);
+          setUserId(payload.id)
+      } catch (error) {
+          console.error('Failed to check authentication status:', error.message);
+      }
+      
       } catch (error) {
         console.error('Failed to check authentication status:', error);
         setIsAuthenticated(false);

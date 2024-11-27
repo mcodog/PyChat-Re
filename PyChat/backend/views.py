@@ -20,12 +20,22 @@ from django.contrib.auth import logout
 from rest_framework.decorators import api_view
 from rest_framework.authtoken.models import Token
 
+import json
+import jwt
+from datetime import datetime, timedelta
+from django.http import JsonResponse
+from django.contrib.auth import authenticate, login
+
+import g4f
+
+SECRET_KEY = '9nsJ5OFGxs5bxC44WH-yVjNa0sk3hL6iQgkL2ejyoGkGZcI1bOnU_s5Xgi02g7lJ'
 
 client = Client()
 def chatwithgpt(prompt):
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
+         provider=g4f.Provider.Blackbox,
         # Add any other necessary parameters
     )
     return response.choices[0].message.content
@@ -154,6 +164,8 @@ class ChatLogListCreate(APIView):
     def post(self, request):
         serializer = ChatLogSerializer(data=request.data)
 
+        print(request.data)
+
         if serializer.is_valid():
             saved_log = serializer.save()  # Save the first ChatLog
 
@@ -182,6 +194,7 @@ class ChatLogListCreate(APIView):
                 match_name = nlp.vocab.strings[match_id]
 
                 if match_name == "ADD_TASK":
+                    print(request.data)
                     user = User.objects.get(pk=request.data.get('user'))
 
                     new_task = Task.objects.create(
@@ -362,9 +375,19 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            # Generate or retrieve an auth token
-            token, _ = Token.objects.get_or_create(user=user)
-            return JsonResponse({'message': 'Login successful', 'token': token.key}, status=200)
+            
+            # Define the JWT payload
+            payload = {
+                'id': user.id,
+                'username': user.username,
+                'exp': datetime.utcnow() + timedelta(hours=24),  # Token expiry (24 hours)
+                'iat': datetime.utcnow(),  # Issued at
+            }
+            
+            # Generate JWT token
+            token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+            return JsonResponse({'message': 'Login successful', 'token': token}, status=200)
 
         return JsonResponse({'error': 'Invalid credentials'}, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=405)

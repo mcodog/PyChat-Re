@@ -76,7 +76,7 @@ const ChatList = () => {
 
     const handleDelete = async (id) => {
         try {
-            const res = await axiosInstance.delete(`/${id}/`)
+            const res = await axiosInstance.delete(`/chats/${id}/`)
             loadChatList()
         } catch(e) {
             console.log(e)
@@ -97,7 +97,7 @@ const ChatList = () => {
                 <div className={modalClass} id="modal-container" onClick={handleModalClick}>
                     <div className="modal-background">
                         <div className="modal" onClick={(e) => e.stopPropagation()}>
-                            <Chat id={selId} setModalActive={setModalActive}/>
+                            <Chat userId={userId} id={selId} setModalActive={setModalActive}/>
                         </div>
                     </div>
                 </div>

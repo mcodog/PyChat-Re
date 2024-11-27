@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://pychat-admin.onrender.com/api/', // Replace with your backend API base URL
+  baseURL: 'http://localhost:8000/api/', // Replace with your backend API base URL
   headers: {
     'Content-Type': 'application/json',
   },
